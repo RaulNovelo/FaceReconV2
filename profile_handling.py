@@ -45,7 +45,7 @@ def getFacesFromWebcam(cropped_faces_path='training-data/temp/valid-imgs'):
     # PERFORMANCE PARAMETERS
     min_face_size = 50
     max_face_size = 250
-    frame_period = 15
+    frame_period = 25
 
     # FOLDER VALIDATION
     # Validates that a brand new folder is available to storage cropped faces

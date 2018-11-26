@@ -16,7 +16,7 @@ class VideoRecognizer(object):
         # self.connection = self.connection.makefile('rb')
         # self.host_name = socket.gethostname()
         # self.host_ip = socket.gethostbyname(self.host_name)
-        self.data = 1
+        self.data = 1 # Placeholder. Delete it
 
 
     def loadSubjects(self):
@@ -27,33 +27,30 @@ class VideoRecognizer(object):
             relations[int(line[0])] = line.replace(line[0] + "-", "")
         file.close()
         self.subjects = relations
-        # return relations
         
 
     def loadModel(self):
         self.face_recognizer = cv2.face.LBPHFaceRecognizer_create()
         self.face_recognizer.read('model/model.yml')
-        # return face_recognizer # self.recognizer = face_recognizer
 
 
     def performPrediction(self, face):
-        """Recognizes the face of a person in the image and
-        returns information about him/her"""
+        """Recognize and returns information about person in the image"""
         # Recognize face
         # Note: predict() returns label=(int number, double confidence)
-        prediction = self.face_recognizer.predict(face)
+        prediction, confidence = self.face_recognizer.predict(face)
 
         # Search person who it's related to the number returned by predict()...
-        if prediction[1] < 100:  # ...if confidence is small enough
-            if prediction[0] in self.subjects:  # ... and if that number is registered in profiles.txt
-                name = self.subjects[prediction[0]]
+        if confidence < 100:  # ...if confidence is small enough
+            if prediction in self.subjects:  # ... and if that number is registered in profiles.txt
+                name = self.subjects[prediction]
             else:
                 name = "Not registered"
         else:
             name = "Unknown"  # ...otherwise, its an unknown person
 
         # Build text to be draw in the image (confidence is converted to percentage)
-        confidence = 100 - prediction[1]
+        confidence = 100 - confidence
         recognition_info = name + " - " + format(confidence, ".2f") + "%"
 
         return recognition_info
@@ -64,20 +61,19 @@ class VideoRecognizer(object):
         min_face_size = 50
         max_face_size = 200
 
-        # LOADING RESOURCES
-        # subjects, model
+        # Load resources
         self.loadSubjects() # Relations number-person (smth like {1: "Fernando", 2: "Esteban", ...})
         self.loadModel()  # Trained model
         face_detector = cv2.CascadeClassifier('xml-files/lbpcascades/lbpcascade_frontalface.xml') # Cascade classifier
         video = cv2.VideoCapture(0) # Video stream
 
-        # READING VIDEO
+        # Read video
         while True:
             avaliability, frame = video.read()
             if avaliability == 0:  # Skip empty frame
                 continue
 
-            # Convert frame to gray scale
+            # Convert frame to gray scale so opencv can read it
             gray_frame = convertToGray(frame)
 
             # Detecting faces in frame
@@ -89,11 +85,11 @@ class VideoRecognizer(object):
                 maxSize=(max_face_size, max_face_size)
             )
 
-            # PROCESSING EACH FACE IN FRAME
+            # Recognize and marks faces in frame
             for (x, y, h, w) in frontal_faces:
-                cropped_face = gray_frame[y:y + w, x:x + h] # Crop face
-                recognition_info = self.performPrediction(cropped_face) # Recognize face
-                frame = drawRectangleText(frame, (x, y, h, w), GREEN, recognition_info, GREEN) # Draw rectangle and text
+                cropped_face = gray_frame[y:y + w, x:x + h]
+                recognition_info = self.performPrediction(cropped_face)
+                frame = drawRectangleText(frame, (x, y, h, w), GREEN, recognition_info, GREEN)
 
             # Display resulting frame
             cv2.imshow("Webcam video feed", frame)
@@ -140,10 +136,13 @@ class VideoRecognizer(object):
                     jpg = stream_bytes[first:last + 2]
                     stream_bytes = stream_bytes[last + 2:]
 
+                    # Decode img from stream so opencv can read it
                     frame = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
 
+                    # Convert img to gray scale
                     gray = convertToGray(frame)
 
+                    # Detect faces in frame
                     frontal_faces = frontal_face_detector.detectMultiScale(
                         gray,
                         scaleFactor=1.2,
@@ -152,22 +151,18 @@ class VideoRecognizer(object):
                         maxSize=(max_face_size, max_face_size)
                     )
 
-                    # Draw a rectangle around the faces
+                    # Recognize and mark faces
                     for (x, y, w, h) in frontal_faces:
-                        cropped_face = gray[y:y + w, x:x + h] # Crop face
-                        recognition_info = self.performPrediction(cropped_face) # Recognize face
+                        cropped_face = gray[y:y + w, x:x + h]
+                        recognition_info = self.performPrediction(cropped_face)
                         print(recognition_info)
-                        frame = drawRectangleText(frame, (x, y, h, w), GREEN, recognition_info, GREEN) # Draw rectangle and text
+                        frame = drawRectangleText(frame, (x, y, h, w), GREEN, recognition_info, GREEN)
 
                     # for (x, y, w, h) in stop_signs:
                     #    frame = drawRectangleText(frame, (x, y, h, w), RED, "Stop", RED
                     #    print('Stop sign detected')
 
-                    # Debug face range rectangles
-                    # frame = drawRectangleText(frame, (0, 0, max_face_size, max_face_size), BLUE, None)
-                    # frame = drawRectangleText(frame, (0, 0, min_face_size, min_face_size), RED, None)
-
-                    # Display the resulting frame
+                    # Display frame
                     cv2.imshow('RPI video stream feed', frame)
 
                     # Press 'q' to stop face recognition

@@ -51,6 +51,7 @@ def selectOption(op):
         pass
     elif op==4:
         print("Agregando perfil...")
+        addProfile()
         # [Code of option 4 goes here]
         pass
     elif op==5:
