@@ -6,9 +6,20 @@ import os
 import sys
 import shutil
 
-# from generic_methods import *
+from generic_methods import *
+from recognition import *
 
 PRY_PATH = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = PRY_PATH + 'model'
+TRAIN_PATH = PRY_PATH + 'training-data'
+CASCADES_PATH = PRY_PATH + 'xml-files'
+
+
+def startStreamServer(): # Not being using anymore
+    h, p = sys.argv[1].split(' ')[0], 8000
+    print("server running on", sys.argv[1].split(' ')[0])
+    VideoRecognizer(h, p)
+
 
 def showMenu():
     menu = """-- MENU (Opciones para el menú final) --
@@ -34,10 +45,13 @@ def showMenu():
             print()
             pass
 
+
 def selectOption(op):
     if op==1:
         print("Iniciando reconocimiento...")
+        print()
         # [Code of option 1 goes here]
+        recognizer.startWebcamRecon()
         pass
     elif op==2:
         print("Entrenando modelo...")
@@ -69,11 +83,14 @@ def selectOption(op):
         
 
 if __name__ == "__main__":
+    recognizer = VideoRecognizer() # Initialize host and port here
+
     try:
         showMenu()
     except KeyboardInterrupt:
         print()
         pass
+
     """
         if op == 1:
             # Validates status of current face recognition model
@@ -108,26 +125,4 @@ if __name__ == "__main__":
             else:
                 print("No existe status")
                 exit(0)
-        elif op == 2:
-            print("Entrenando modelo...")
-            print()
-            trainModel()
-            print()
-        elif op == 3:
-            print("Accediendo a perfiles...")
-            showCurrentProfiles()
-            print()
-        elif op == 4:
-            print("Agregando perfil...")
-            addProfile()
-            print()
-        elif op == 5:
-            exit(0)
-        elif op == 6:
-            print()
-            getFacesFromWebcam()
-            print()
-        else:
-            print("Opcion no valida")
-            print()
     """
