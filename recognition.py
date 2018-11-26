@@ -3,7 +3,6 @@ import numpy as np
 # import socket
 
 import os
-import shutil
 
 from generic_methods import *
 

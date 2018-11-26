@@ -8,18 +8,19 @@ import shutil
 
 from generic_methods import *
 from recognition import *
+from training import trainModel
 
 PRY_PATH = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = PRY_PATH + 'model'
 TRAIN_PATH = PRY_PATH + 'training-data'
 CASCADES_PATH = PRY_PATH + 'xml-files'
 
-
-def startStreamServer(): # Not being using anymore
+"""
+def startStreamServer(): # Not being used anymore
     h, p = sys.argv[1].split(' ')[0], 8000
     print("server running on", sys.argv[1].split(' ')[0])
     VideoRecognizer(h, p)
-
+"""
 
 def showMenu():
     menu = """-- MENU (Opciones para el menú final) --
@@ -49,14 +50,10 @@ def showMenu():
 def selectOption(op):
     if op==1:
         print("Iniciando reconocimiento...")
-        print()
-        # [Code of option 1 goes here]
         recognizer.startWebcamRecon()
-        pass
     elif op==2:
         print("Entrenando modelo...")
-        # [Code of option 2 goes here]
-        pass
+        trainModel()
     elif op==3:
         print("Accediendo a perfiles...")
         # [Code of option 3 goes here]
@@ -83,6 +80,7 @@ def selectOption(op):
         
 
 if __name__ == "__main__":
+
     recognizer = VideoRecognizer() # Initialize host and port here
 
     try:
