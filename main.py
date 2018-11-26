@@ -14,7 +14,7 @@ from profile_handling import *
 PRY_PATH = os.path.dirname(os.path.abspath(__file__))
 
 def showMenu():
-    menu = """-- MENU (Opciones para el menú final) --
+    menu = """-- MENU (Opciones para el menu final) --
         [ 1 ] --- Iniciar recon facial
         [ 2 ] --- Entrenar modelo
         [ 3 ] --- Ver perfiles del modelo
@@ -25,7 +25,7 @@ def showMenu():
         [ 7 ] --- Usar webcam para conseguir caras"""
 
     op = 0
-    while(op != 6): 
+    while(op != 6):
         print(menu)
         print()
         try:
@@ -33,48 +33,52 @@ def showMenu():
             print()
             selectOption(op)
         except ValueError:
-            print("Solo se permiten números")
+            print("Solo se permiten numeros")
             print()
             pass
 
 
 def selectOption(op):
-    if op==1:
+    if op == 1:
         print("Iniciando reconocimiento...")
-        recognizer.startWebcamRecon()
-    elif op==2:
+        h, p = sys.argv[1].split(' ')[0], 8000
+        c, pc = '192.168.100.64', 8002
+        print("server running on", h)
+        try:
+            Consumer(c, pc).start()
+        except:
+            pass
+        VideoRecognizer(h, p).start()
+
+    elif op == 2:
         print("Entrenando modelo...")
         trainModel()
-    elif op==3:
+    elif op == 3:
         print("Accediendo a perfiles...")
         showCurrentProfiles()
         pass
-    elif op==4:
+    elif op == 4:
         print("Agregando perfil...")
         addProfile()
         # [Code of option 4 goes here]
         pass
-    elif op==5:
+    elif op == 5:
         print("Removiendo perfil...")
         # [Code of option 5 goes here]
         pass
-    elif op==6:
+    elif op == 6:
         print("Saliendo...")
         pass
-    elif op==7:
+    elif op == 7:
         print("Recolectando caras...")
         getFacesFromWebcam()
         pass
     else:
-        print("Opción no válida")
+        print("Opcion no valida")
     print()
-        
+
 
 if __name__ == "__main__":
-    # h, p = sys.argv[1].split(' ')[0], 8000
-    # print("server running on", sys.argv[1].split(' ')[0])
-    recognizer = VideoRecognizer() # VideoRecognizer(h, p)
-
     try:
         showMenu()
     except KeyboardInterrupt:

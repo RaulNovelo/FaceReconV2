@@ -205,7 +205,7 @@ def showCurrentProfiles(profiles_file_path=MODEL_PATH + '/profiles.txt'):
         print("PERFILES ACTUALES")
         file = open(profiles_file_path)
         for line in file:
-            print(line, end="")
+            print(line, "\n")
         file.close()
     else:
         print("No existe perfil alguno")
