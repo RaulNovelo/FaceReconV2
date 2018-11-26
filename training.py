@@ -87,7 +87,7 @@ def trainModel():
     # Lists that relates a face with a label, and a label (number) with a name
     faces, labels, numbers, names = prepareTrainingData('training-data')
 
-    print("¡Datos listos!")
+    print("Datos listos!")
     print()
 
     # Results of training data preparation
