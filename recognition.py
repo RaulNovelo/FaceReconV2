@@ -16,51 +16,43 @@ class VideoRecognizer(object):
         # self.connection = self.connection.makefile('rb')
         # self.host_name = socket.gethostname()
         # self.host_ip = socket.gethostbyname(self.host_name)
-        # self.streaming()
         self.data = 1
 
 
     def loadSubjects(self):
         relations = {}
-        # if not os.path.isfile("model/profiles.txt"):
-        #    print("No se encontro archivo de perfiles")
-        #    exit(0)
         file = open('model/profiles.txt', "r")
         for line in file:
             line = line.replace("\n", "")
             relations[int(line[0])] = line.replace(line[0] + "-", "")
         file.close()
-        return relations
-
+        self.subjects = relations
+        # return relations
+        
 
     def loadModel(self):
-        # if not os.path.isfile("model/model.yml"):
-        #    print("No se encontro archivo de modelo")
-        #    exit(0)
-        face_recognizer = cv2.face.LBPHFaceRecognizer_create()
-        face_recognizer.read('model/model.yml')
-        return face_recognizer
+        self.face_recognizer = cv2.face.LBPHFaceRecognizer_create()
+        self.face_recognizer.read('model/model.yml')
+        # return face_recognizer # self.recognizer = face_recognizer
 
 
-    def performPrediction(self, face, recognizer, subjects):
+    def performPrediction(self, face):
         """Recognizes the face of a person in the image and
-        returns information about that person"""
-
+        returns information about him/her"""
         # Recognize face
         # Note: predict() returns label=(int number, double confidence)
-        prediction = recognizer.predict(face)
+        prediction = self.face_recognizer.predict(face)
 
         # Search person who it's related to the number returned by predict()...
         if prediction[1] < 100:  # ...if confidence is small enough
-            if prediction[0] in subjects:  # ... and if that number is registered in profiles.txt
-                name = subjects[prediction[0]]
+            if prediction[0] in self.subjects:  # ... and if that number is registered in profiles.txt
+                name = self.subjects[prediction[0]]
             else:
                 name = "Not registered"
         else:
-            name = "Unknown"  # otherwise, its an unknown person
+            name = "Unknown"  # ...otherwise, its an unknown person
 
-        # Build text to be draw in the image (with confidence
-        # value converted to percentage)
+        # Build text to be draw in the image (confidence is converted to percentage)
         confidence = 100 - prediction[1]
         recognition_info = name + " - " + format(confidence, ".2f") + "%"
 
@@ -73,26 +65,23 @@ class VideoRecognizer(object):
         max_face_size = 200
 
         # LOADING RESOURCES
-        # Relations number-person (smth like {1: "Fernando", 2: "Esteban", ...})
-        subjects = self.loadSubjects()
-        # Trained model
-        model = self.loadModel()
-        # Cascade classifier
-        cascade = cv2.CascadeClassifier('xml-files/lbpcascades/lbpcascade_frontalface.xml')
-        # Video stream
-        video = cv2.VideoCapture(0)
+        # subjects, model
+        self.loadSubjects() # Relations number-person (smth like {1: "Fernando", 2: "Esteban", ...})
+        self.loadModel()  # Trained model
+        face_detector = cv2.CascadeClassifier('xml-files/lbpcascades/lbpcascade_frontalface.xml') # Cascade classifier
+        video = cv2.VideoCapture(0) # Video stream
 
         # READING VIDEO
         while True:
-            return_value, frame = video.read()
-            if return_value == 0:  # Skip empty frame
+            avaliability, frame = video.read()
+            if avaliability == 0:  # Skip empty frame
                 continue
 
             # Convert frame to gray scale
             gray_frame = convertToGray(frame)
 
             # Detecting faces in frame
-            faces = cascade.detectMultiScale(
+            frontal_faces = face_detector.detectMultiScale(
                 gray_frame,
                 scaleFactor=1.1,
                 minNeighbors=8,
@@ -101,13 +90,10 @@ class VideoRecognizer(object):
             )
 
             # PROCESSING EACH FACE IN FRAME
-            for (x, y, h, w) in faces:
-                # Crop face
-                cropped_face = gray_frame[y:y + w, x:x + h]
-                # Recognize face
-                recognition_info = self.performPrediction(cropped_face, model, subjects)
-                # Draw rectangle and text
-                frame = drawRectangleText(frame, (x, y, h, w), GREEN, recognition_info, GREEN)
+            for (x, y, h, w) in frontal_faces:
+                cropped_face = gray_frame[y:y + w, x:x + h] # Crop face
+                recognition_info = self.performPrediction(cropped_face) # Recognize face
+                frame = drawRectangleText(frame, (x, y, h, w), GREEN, recognition_info, GREEN) # Draw rectangle and text
 
             # Display resulting frame
             cv2.imshow("Webcam video feed", frame)
@@ -125,20 +111,18 @@ class VideoRecognizer(object):
 
     def startStreamRecon(self):
         # DEFAULT SIZES
-        min_face_size = 45  # 40 is good for PiCamera detection up to 4 meters
-        max_face_size = 155  # up to 160 (smaller size, better performance)
+        # 40-160 is a good range for RaspiCam detection up to 4 meters
+        min_face_size = 45
+        max_face_size = 155
 
         # LOAD RESOURCES
         # Load detectors
-        frontal_detector = cv2.CascadeClassifier('xml-files/lbpcascades/lbpcascade_frontalface.xml')
+        frontal_face_detector = cv2.CascadeClassifier('xml-files/lbpcascades/lbpcascade_frontalface.xml')
         # stop_sign_detector = cv2.CascadeClassifier('xml-files/haarcascades/stop_sign.xml')
-        # frontal_detector = cv2.CascadeClassifier('xml-files/haarcascades/traffic_light.xml')
-        # lateral_detector = cv2.CascadeClassifier('xml-files/haarcascades/haarcascade_profileface.xml')
-
-        # Load subjects (for prediction)
-        subjects = self.loadSubjects()
-        # Load trained model
-        model = self.loadModel()
+        # traffic_light_detector = cv2.CascadeClassifier('xml-files/haarcascades/traffic_light.xml')
+        # lateral_face_detector = cv2.CascadeClassifier('xml-files/haarcascades/haarcascade_profileface.xml')
+        self.loadSubjects() # Load subjects (for prediction)
+        self.loadModel() # Load trained model
 
         try:
             print("Host: ", self.host_name + ' ' + self.host_ip)
@@ -146,7 +130,7 @@ class VideoRecognizer(object):
             print("Streaming...")
             print("Press 'q' to exit")
 
-            # need bytes here
+            # Need bytes here
             stream_bytes = b' '
             while True:
                 stream_bytes += self.connection.read(1024)
@@ -160,31 +144,28 @@ class VideoRecognizer(object):
 
                     gray = convertToGray(frame)
 
-                    frontal_faces = frontal_detector.detectMultiScale(
+                    frontal_faces = frontal_face_detector.detectMultiScale(
                         gray,
                         scaleFactor=1.2,
                         minNeighbors=8,
-                        minSize=(minFaceSize, minFaceSize),
-                        maxSize=(maxFaceSize, maxFaceSize)
+                        minSize=(min_face_size, min_face_size),
+                        maxSize=(max_face_size, max_face_size)
                     )
 
                     # Draw a rectangle around the faces
                     for (x, y, w, h) in frontal_faces:
-                        # Crop face
-                        cropped_face = gray[y:y + w, x:x + h]
-                        # Recognize face
-                        recognition_info = self.performPrediction(cropped_face, model, subjects)
+                        cropped_face = gray[y:y + w, x:x + h] # Crop face
+                        recognition_info = self.performPrediction(cropped_face) # Recognize face
                         print(recognition_info)
-                        # Draw rectangle and text
-                        frame = drawRectangleText(frame, (x, y, h, w), GREEN, recognition_info, GREEN)
+                        frame = drawRectangleText(frame, (x, y, h, w), GREEN, recognition_info, GREEN) # Draw rectangle and text
 
                     # for (x, y, w, h) in stop_signs:
                     #    frame = drawRectangleText(frame, (x, y, h, w), RED, "Stop", RED
                     #    print('Stop sign detected')
 
                     # Debug face range rectangles
-                    frame = drawRectangleText(frame, (0, 0, max_face_size, max_face_size), BLUE, None)
-                    frame = drawRectangleText(frame, (0, 0, min_face_size, min_face_size), RED, None)
+                    # frame = drawRectangleText(frame, (0, 0, max_face_size, max_face_size), BLUE, None)
+                    # frame = drawRectangleText(frame, (0, 0, min_face_size, min_face_size), RED, None)
 
                     # Display the resulting frame
                     cv2.imshow('RPI video stream feed', frame)

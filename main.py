@@ -12,16 +12,6 @@ from training import trainModel
 from profile_handling import *
 
 PRY_PATH = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = PRY_PATH + 'model'
-TRAIN_PATH = PRY_PATH + 'training-data'
-CASCADES_PATH = PRY_PATH + 'xml-files'
-
-"""
-def startStreamServer(): # Not being used anymore
-    h, p = sys.argv[1].split(' ')[0], 8000
-    print("server running on", sys.argv[1].split(' ')[0])
-    VideoRecognizer(h, p)
-"""
 
 def showMenu():
     menu = """-- MENU (Opciones para el menú final) --
@@ -58,7 +48,6 @@ def selectOption(op):
     elif op==3:
         print("Accediendo a perfiles...")
         showCurrentProfiles()
-        # [Code of option 3 goes here]
         pass
     elif op==4:
         print("Agregando perfil...")
@@ -81,8 +70,9 @@ def selectOption(op):
         
 
 if __name__ == "__main__":
-
-    recognizer = VideoRecognizer() # Initialize host and port here
+    # h, p = sys.argv[1].split(' ')[0], 8000
+    # print("server running on", sys.argv[1].split(' ')[0])
+    recognizer = VideoRecognizer() # VideoRecognizer(h, p)
 
     try:
         showMenu()
