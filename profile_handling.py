@@ -6,6 +6,8 @@ import os
 import sys
 import shutil
 
+from generic_methods import *
+
 MODEL_PATH = 'model'
 
 def getNumbers(profiles_file_path=MODEL_PATH + '/profiles.txt'):
@@ -78,17 +80,12 @@ def getFacesFromWebcam(cropped_faces_path='training-data/temp/valid-imgs'):
     while True:
         # Read video frame by frame
         value, frame = video.read()
-        # If frame is empty, pick next frame
-        if value == 0:
+        if value == 0: # Skip empty frame
             continue
-
-        # Draw boundaries
-        # cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        # cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
         # DETECTING FACES AND DISPLAYING VIDEO
         # Convert frame to gray scale for better detection accuracy
-        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray_frame = convertToGray(frame)
 
         # Detect faces in frame
         faces = face_detector.detectMultiScale(
@@ -101,7 +98,7 @@ def getFacesFromWebcam(cropped_faces_path='training-data/temp/valid-imgs'):
 
         # Draw faces over frame
         for (x, y, h, w) in faces:
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            frame = drawRectangleText(frame, (x, y, w, h), GREEN, "", GREEN)
 
         # Display resulting frame
         cv2.imshow("Video feed", frame)
@@ -197,11 +194,12 @@ def addProfile(model_data_path='model', media_folder_path='training-data/temp'):
     file.write("Outdated")
     file.close()
 
-    # Clean incoming media folder (for storage space saving)
+    # Clean incoming media folder (to save storage space)
     shutil.rmtree(media_folder_path)
 
 
 def showCurrentProfiles(profiles_file_path=MODEL_PATH + '/profiles.txt'):
+    """Prints the names and numbers of current active profiles for face recognition"""
     if os.path.isfile(profiles_file_path):
         # Read profiles from file
         print("PERFILES ACTUALES")
