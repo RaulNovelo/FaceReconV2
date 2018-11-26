@@ -9,6 +9,7 @@ import shutil
 from generic_methods import *
 from recognition import *
 from training import trainModel
+from profile_handling import *
 
 PRY_PATH = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = PRY_PATH + 'model'
@@ -56,6 +57,7 @@ def selectOption(op):
         trainModel()
     elif op==3:
         print("Accediendo a perfiles...")
+        showCurrentProfiles()
         # [Code of option 3 goes here]
         pass
     elif op==4:
@@ -68,11 +70,10 @@ def selectOption(op):
         pass
     elif op==6:
         print("Saliendo...")
-        # [Code of option 6 goes here]
         pass
     elif op==7:
         print("Recolectando caras...")
-        # [Code of option 7 goes here]
+        getFacesFromWebcam()
         pass
     else:
         print("Opción no válida")
