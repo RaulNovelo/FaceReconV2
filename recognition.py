@@ -1,23 +1,23 @@
 import cv2
 import numpy as np
-# import socket
-
+import socket
 import os
-
 from generic_methods import *
+from threading import Thread
+import threading
 
-class VideoRecognizer(object):
-    # def __init__(self, host, port):
-    def __init__(self):
-        # self.server_socket = socket.socket()
-        # self.server_socket.bind((host, port))
-        # self.server_socket.listen(0)
-        # self.connection, self.client_address = self.server_socket.accept()
-        # self.connection = self.connection.makefile('rb')
-        # self.host_name = socket.gethostname()
-        # self.host_ip = socket.gethostbyname(self.host_name)
-        self.data = 1 # Placeholder. Delete it
+pipeline = []
 
+class VideoRecognizer(Thread):
+    def __init__(self, host, port):
+        self.server_socket = socket.socket()
+        self.server_socket.bind((host, port))
+        self.server_socket.listen(0)
+        self.connection, self.client_address = self.server_socket.accept()
+        self.connection = self.connection.makefile('rb')
+        self.host_name = socket.gethostname()
+        self.host_ip = socket.gethostbyname(self.host_name)
+        self.run()
 
     def loadSubjects(self):
         relations = {}
@@ -105,7 +105,8 @@ class VideoRecognizer(object):
         cv2.destroyAllWindows()
 
 
-    def startStreamRecon(self):
+    def run(self):
+        global pipeline
         # DEFAULT SIZES
         # 40-160 is a good range for RaspiCam detection up to 4 meters
         min_face_size = 45
@@ -163,7 +164,7 @@ class VideoRecognizer(object):
                     #    print('Stop sign detected')
 
                     # Display frame
-                    cv2.imshow('RPI video stream feed', frame)
+                    cv2.imshow('RPi video stream feed', frame)
 
                     # Press 'q' to stop face recognition
                     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -171,3 +172,30 @@ class VideoRecognizer(object):
         finally:
             self.connection.close()
             self.server_socket.close()
+
+class Consumer(Thread):
+    def __init__(self, host, port):
+        threading.Thread.__init__(self)
+        self._host = host
+        self._port = port
+
+    def run(self):
+        try:
+            # create a socket and bind socket to the host
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client_socket.connect((self._host, self._port))
+            while True:
+                try:
+                    if len(pipeline) > 0:
+                        data = pipeline.pop()
+                        client_socket.send(str(data))
+                        print(data)
+                except:
+                    pass
+                # Press 'q' to stop face recognition
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+                
+        finally:
+            client_socket.close()
+            pass
